@@ -1,0 +1,30 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests
+
+name: PNPM CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [26]
+
+    steps:
+    - uses: actions/checkout@v6
+    - name: Install pnpm and Node.js
+      uses: pnpm/setup@c9883cc79df532ad1a7b81bf9ab944ceb090d65c
+      with:
+        runtime: node@${{ matrix.node-version }}
+        cache: true
+    - run: pnpm typecheck
+    - run: pnpm lint
+    - run: pnpm run build
+    - run: pnpm test
