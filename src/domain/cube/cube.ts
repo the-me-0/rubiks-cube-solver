@@ -84,17 +84,43 @@ class Cube {
     }
 
     private getFace(color: Color): string {
-        this.edgesState
+        const edges = this.getEdges();
 
-        if (color == Color.White) {
-
+        switch (color) {
+            case Color.White:
+                // get 4 last items of the array, which are positions 0 to 3
+                break;
+            case Color.Orange:
+                // get positions 1, 4, 9, 5
+                break;
+            case Color.Blue:
+                // get positions 2, 5, 10, 6
+                break;
+            case Color.Red:
+                // get positions 3, 6, 11, 7
+                break;
+            case Color.Green:
+                // get positions 0, 4, 8, 7
+                break;
+            case Color.Yellow:
+                // get positions 8, 9, 10, 11
+                break;
+            default: throw new Error("CubeError: getFace called with invalid color.");
         }
+
+        // return something like
+        /**
+         *  '🟥 🟥 🟥\r🟥 🟥 🟥\r🟥 🟥 🟥'
+         */
+
     }
 
     /**
      * Returns a printable string meant to be sent in the console, representing the cube's current state
      */
     public toString() {
+
+
         console.log('          🟥 🟥 🟥');
         console.log('          🟥 🟥 🟥');
         console.log('          🟥 🟥 🟥');
