@@ -16,9 +16,9 @@ type Color = (typeof Color)[keyof typeof Color];
  */
 
 const RANK = {
-    HIGH: 2,
+    HIGH: 0,
     MEDIUM: 1,
-    LOW: 0
+    LOW: 2
 } as const;
 type RANK = (typeof RANK)[keyof typeof RANK];
 
@@ -32,8 +32,8 @@ const resolveLowestRank = (edge: Edge): keyof Edge  => {
     const colorOneRank = colorToRank(edge.colorOne);
     const colorTwoRank = colorToRank(edge.colorTwo);
 
-    if (colorOneRank < colorTwoRank) return "colorOne";
-    if (colorTwoRank < colorOneRank) return "colorTwo";
+    if (colorOneRank > colorTwoRank) return "colorOne";
+    if (colorTwoRank > colorOneRank) return "colorTwo";
     // should not happen. edges with two sides of the same rank would mean the rubiks cube is invalid.
     else throw new Error("CubeError: unable to resolve lowest color rank for an edge. Are you feeding an invalid edge ?");
 }
@@ -42,8 +42,8 @@ const resolveHighestRank = (edge: Edge): keyof Edge  => {
     const colorOneRank = colorToRank(edge.colorOne);
     const colorTwoRank = colorToRank(edge.colorTwo);
 
-    if (colorOneRank > colorTwoRank) return "colorOne";
-    if (colorTwoRank > colorOneRank) return "colorTwo";
+    if (colorOneRank < colorTwoRank) return "colorOne";
+    if (colorTwoRank < colorOneRank) return "colorTwo";
 
     // should not happen. edges with two sides of the same rank would mean the rubiks cube is invalid.
     else {
@@ -95,14 +95,14 @@ class Cube {
         { colorOne: Color.Yellow, colorTwo: Color.Red }
     ];
     public static cornerLibrary: Array<Corner> = [
-        { colorOne: Color.White, colorTwo: Color.Green, colorThree: Color.Orange },
-        { colorOne: Color.White, colorTwo: Color.Orange, colorThree: Color.Blue },
-        { colorOne: Color.White, colorTwo: Color.Blue, colorThree: Color.Red },
-        { colorOne: Color.White, colorTwo: Color.Red, colorThree: Color.Green },
-        { colorOne: Color.Yellow, colorTwo: Color.Green, colorThree: Color.Orange },
-        { colorOne: Color.Yellow, colorTwo: Color.Orange, colorThree: Color.Blue },
-        { colorOne: Color.Yellow, colorTwo: Color.Blue, colorThree: Color.Red },
-        { colorOne: Color.Yellow, colorTwo: Color.Red, colorThree: Color.Green }
+        { colorOne: Color.White,  colorTwo: Color.Green,  colorThree: Color.Orange },
+        { colorOne: Color.White,  colorTwo: Color.Orange, colorThree: Color.Blue },
+        { colorOne: Color.White,  colorTwo: Color.Blue,   colorThree: Color.Red },
+        { colorOne: Color.White,  colorTwo: Color.Red,    colorThree: Color.Green },
+        { colorOne: Color.Yellow, colorTwo: Color.Orange, colorThree: Color.Green },
+        { colorOne: Color.Yellow, colorTwo: Color.Blue,   colorThree: Color.Orange },
+        { colorOne: Color.Yellow, colorTwo: Color.Red,    colorThree: Color.Blue },
+        { colorOne: Color.Yellow, colorTwo: Color.Green,  colorThree: Color.Red }
     ];
 
     private readonly edgesSolved: string = "01011_01010_01001_01000_00111_00110_00101_00100_00011_00010_00001_00000";
@@ -117,7 +117,7 @@ class Cube {
      */
     private constructor() {
         this.edgesState = this.edgesSolved;
-        this.cornersState = this.cornersSolved;
+        this.cornersState = "00111_00110_00101_00100_00011_00010_00001_00000";
     }
 
     public static get instance(): Cube {
@@ -130,6 +130,10 @@ class Cube {
 
     private getEdges(): Array<string> {
         return this.edgesState.split('_')
+    }
+
+    private getCorners(): Array<string> {
+        return this.cornersState.split('_');
     }
 
     private resolveEdgeColor(edgeNumber: number, faceGoal: Color): Color {
@@ -161,8 +165,37 @@ class Cube {
         }
     }
 
-    private getFace(color: Color): string {
+    private resolveCornerColor(cornerNumber: number, faceGoal: Color): Color {
+        const corners = this.getCorners().reverse();
 
+        const cornerOfInterest = Cube.cornerLibrary[parseInt(corners[cornerNumber].slice(-3), 2)];
+        const onPosition = Cube.cornerLibrary[cornerNumber];
+
+        const alignedBit = parseInt(corners[cornerNumber].slice(0, 2), 2); // 0, 1, 2
+
+        if (alignedBit > 2) {
+            throw new Error("CubeError: couldn't determine a correct alignment for a corner from alignment bits.");
+        }
+
+        // faces of the slot (a face is identified by its center color), and stickers of the piece
+        const slotFaces: Color[] = [onPosition.colorOne, onPosition.colorTwo, onPosition.colorThree];
+        const pieceColors: Color[] = [cornerOfInterest.colorOne, cornerOfInterest.colorTwo, cornerOfInterest.colorThree];
+
+        const faceIndex = slotFaces.indexOf(faceGoal);
+        if (faceIndex === -1) {
+            throw new Error("CubeError: resolveCornerColor called with a face that doesn't touch this corner position.");
+        }
+
+        // Face of the slot on which the piece's strongest color sits.
+        // RANK values (HIGH=0, MEDIUM=1, LOW=2) match the alignment values, so 0/1/2 maps straight to strongest/medium/lowest face.
+        const strongestFaceIndex = slotFaces.findIndex(face => colorToRank(face) === alignedBit);
+
+        // A twisted corner keeps its cyclic color order, so the sticker on faceGoal
+        // is the one offset from the strongest sticker by the same amount as the faces.
+        return pieceColors[(faceIndex - strongestFaceIndex + 3) % 3];
+    }
+
+    private getFace(color: Color): string {
         /**
          * IMPLEMENT ROTATION ARGUMENT.
          * Face in itself has no real sense. add "anchorColor" argument, which would be the color one face above, so we know the face is rotated the right way.
@@ -176,20 +209,19 @@ class Cube {
 
         switch (color) {
             case Color.White:
-                // get positions 0 to 3
-                paintedFace += "          ⬜ ";
-                paintedFace += colorToEmoji(this.resolveEdgeColor(3, Color.White));
-                paintedFace += " ⬜\n          ";
+                paintedFace += "          ";
+                paintedFace += colorToEmoji(this.resolveCornerColor(2, Color.White)) + ' ';
+                paintedFace += colorToEmoji(this.resolveEdgeColor(3, Color.White)) + ' ';
+                paintedFace += colorToEmoji(this.resolveCornerColor(3, Color.White));
 
-                paintedFace += colorToEmoji(this.resolveEdgeColor(2, Color.White));
-                paintedFace += " ⬜ ";
-
-                paintedFace += colorToEmoji(this.resolveEdgeColor(0, Color.White));
                 paintedFace += "\n          ";
-
-                paintedFace += "⬜ ";
-                paintedFace += colorToEmoji(this.resolveEdgeColor(1, Color.White));
-                paintedFace += " ⬜\n";
+                paintedFace += colorToEmoji(this.resolveEdgeColor(2, Color.White)) + ' ⬜ ';
+                paintedFace += colorToEmoji(this.resolveEdgeColor(0, Color.White));
+            
+                paintedFace += "\n          ";
+                paintedFace += colorToEmoji(this.resolveCornerColor(1, Color.White)) + ' ';
+                paintedFace += colorToEmoji(this.resolveEdgeColor(1, Color.White)) + ' ';
+                paintedFace += colorToEmoji(this.resolveCornerColor(0, Color.White)) + "\n";
 
                 break;
             case Color.Orange:
