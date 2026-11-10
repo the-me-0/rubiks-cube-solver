@@ -15,6 +15,55 @@ type Color = (typeof Color)[keyof typeof Color];
  * LOW      - GREEN/BLUE
  */
 
+const RANK = {
+    HIGH: 2,
+    MEDIUM: 1,
+    LOW: 0
+} as const;
+type RANK = (typeof RANK)[keyof typeof RANK];
+
+const colorToRank = (color: Color) => {
+    if (color === Color.White || color === Color.Yellow) return RANK.HIGH;
+    if (color === Color.Red || color === Color.Orange) return RANK.MEDIUM;
+    else return RANK.LOW;
+}
+
+const resolveLowestRank = (edge: Edge): keyof Edge  => {
+    const colorOneRank = colorToRank(edge.colorOne);
+    const colorTwoRank = colorToRank(edge.colorTwo);
+
+    if (colorOneRank < colorTwoRank) return "colorOne";
+    if (colorTwoRank < colorOneRank) return "colorTwo";
+    // should not happen. edges with two sides of the same rank would mean the rubiks cube is invalid.
+    else throw new Error("CubeError: unable to resolve lowest color rank for an edge. Are you feeding an invalid edge ?");
+}
+
+const resolveHighestRank = (edge: Edge): keyof Edge  => {
+    const colorOneRank = colorToRank(edge.colorOne);
+    const colorTwoRank = colorToRank(edge.colorTwo);
+
+    if (colorOneRank > colorTwoRank) return "colorOne";
+    if (colorTwoRank > colorOneRank) return "colorTwo";
+
+    // should not happen. edges with two sides of the same rank would mean the rubiks cube is invalid.
+    else {
+        console.log('colorOne :' + colorOneRank + '/' + edge.colorOne + ' -------- colorTwo :' + colorTwoRank + '/' + edge.colorTwo);
+        throw new Error("CubeError: unable to resolve lowest color rank for an edge. Are you feeding an invalid edge ?");
+    }
+}
+
+const colorToEmoji = (color: Color): string => {
+    switch (color) {
+        case Color.White: return "⬜";
+        case Color.Yellow: return "🟨";
+        case Color.Red: return "🟥";
+        case Color.Orange: return "🟧";
+        case Color.Green: return "🟩";
+        case Color.Blue: return "🟦";
+        default: return "";
+    }
+}
+
 // 1 OBJET CUBE
 // propriété "arete" entier 64 bits, 5 bits par arete. 4 pour id, sa position est déterminée par son emplacement dans l'entier binaire.
 //   le dernier bit est un bit de positionnement : si sur cette edge, la couleur la plus importante est du même côté que si on la remplaçait par la bonne edge
@@ -31,7 +80,7 @@ class Cube {
     private edgesState: string;
     private cornersState: string;
 
-    public static edgeToColors: Array<Edge> = [
+    public static edgeLibrary: Array<Edge> = [
         { colorOne: Color.White, colorTwo: Color.Green },
         { colorOne: Color.White, colorTwo: Color.Orange },
         { colorOne: Color.White, colorTwo: Color.Blue },
@@ -45,7 +94,7 @@ class Cube {
         { colorOne: Color.Yellow, colorTwo: Color.Blue },
         { colorOne: Color.Yellow, colorTwo: Color.Red }
     ];
-    public static cornerToColors: Array<Corner> = [
+    public static cornerLibrary: Array<Corner> = [
         { colorOne: Color.White, colorTwo: Color.Green, colorThree: Color.Orange },
         { colorOne: Color.White, colorTwo: Color.Orange, colorThree: Color.Blue },
         { colorOne: Color.White, colorTwo: Color.Blue, colorThree: Color.Red },
@@ -83,12 +132,65 @@ class Cube {
         return this.edgesState.split('_')
     }
 
+    private resolveEdgeColor(edgeNumber: number, faceGoal: Color): Color {
+        // we reverse it to be able to read the positions easily
+        const edges = this.getEdges().reverse();
+
+        const edgeOfInterest = Cube.edgeLibrary[parseInt(edges[edgeNumber].slice(-4), 2)];
+        const onPosition = Cube.edgeLibrary[edgeNumber];
+
+        const alignedBit = edges[edgeNumber][0] == "1";
+    
+        if (!alignedBit) {
+            // bit is 0, means aligned edge.
+            if (onPosition[resolveHighestRank(onPosition)] == faceGoal) {
+                // so, we look for the highest rank in the given edge
+                return edgeOfInterest[resolveHighestRank(edgeOfInterest)];
+            } else {
+                // means the face we are looking for is the lowest ranked on this position. We have to return the lowest ranked on the given edge.
+                return edgeOfInterest[resolveLowestRank(edgeOfInterest)];
+            }
+        } else {
+            // bit is 1, means unaligned edge.
+            // Same as upward, be reverse the result.
+            if (onPosition[resolveHighestRank(onPosition)] == faceGoal) {
+                return edgeOfInterest[resolveLowestRank(edgeOfInterest)];
+            } else {
+                return edgeOfInterest[resolveHighestRank(edgeOfInterest)];
+            }
+        }
+    }
+
     private getFace(color: Color): string {
-        const edges = this.getEdges();
+
+        /**
+         * IMPLEMENT ROTATION ARGUMENT.
+         * Face in itself has no real sense. add "anchorColor" argument, which would be the color one face above, so we know the face is rotated the right way.
+         */
+
+        /**
+         * IMPLEMENT CORNERS
+         */
+
+        let paintedFace = "";
 
         switch (color) {
             case Color.White:
-                // get 4 last items of the array, which are positions 0 to 3
+                // get positions 0 to 3
+                paintedFace += "          ⬜ ";
+                paintedFace += colorToEmoji(this.resolveEdgeColor(3, Color.White));
+                paintedFace += " ⬜\n          ";
+
+                paintedFace += colorToEmoji(this.resolveEdgeColor(2, Color.White));
+                paintedFace += " ⬜ ";
+
+                paintedFace += colorToEmoji(this.resolveEdgeColor(0, Color.White));
+                paintedFace += "\n          ";
+
+                paintedFace += "⬜ ";
+                paintedFace += colorToEmoji(this.resolveEdgeColor(1, Color.White));
+                paintedFace += " ⬜\n";
+
                 break;
             case Color.Orange:
                 // get positions 1, 4, 9, 5
@@ -113,6 +215,8 @@ class Cube {
          *  '🟥 🟥 🟥\r🟥 🟥 🟥\r🟥 🟥 🟥'
          */
 
+        return paintedFace;
+
     }
 
     /**
@@ -120,10 +224,11 @@ class Cube {
      */
     public toString() {
 
+        console.log(this.getFace(Color.White));
 
-        console.log('          🟥 🟥 🟥');
-        console.log('          🟥 🟥 🟥');
-        console.log('          🟥 🟥 🟥');
+        // console.log('          🟥 🟥 🟥');
+        // console.log('          🟥 🟥 🟥');
+        // console.log('          🟥 🟥 🟥');
         console.log('🟦 🟦 🟦 ⬜ ⬜ ⬜ 🟩 🟩 🟩')
         console.log('🟦 🟦 🟦 ⬜ ⬜ ⬜ 🟩 🟩 🟩')
         console.log('🟦 🟦 🟦 ⬜ ⬜ ⬜ 🟩 🟩 🟩')
