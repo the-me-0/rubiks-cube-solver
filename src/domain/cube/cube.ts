@@ -1,12 +1,12 @@
-const Color = {
-    White: 5,
-    Yellow: 4,
-    Red: 3,
-    Orange: 2,
-    Green: 1,
-    Blue: 0
+const COLOR = {
+    WHITE: 5,
+    YELLOW: 4,
+    RED: 3,
+    ORANGE: 2,
+    GREEN: 1,
+    BLUE: 0
 } as const;
-type Color = (typeof Color)[keyof typeof Color];
+type COLOR = (typeof COLOR)[keyof typeof COLOR];
 
 /**
  *      PRIORITY
@@ -22,9 +22,9 @@ const RANK = {
 } as const;
 type RANK = (typeof RANK)[keyof typeof RANK];
 
-const colorToRank = (color: Color) => {
-    if (color === Color.White || color === Color.Yellow) return RANK.HIGH;
-    if (color === Color.Red || color === Color.Orange) return RANK.MEDIUM;
+const colorToRank = (color: COLOR) => {
+    if (color === COLOR.WHITE || color === COLOR.YELLOW) return RANK.HIGH;
+    if (color === COLOR.RED || color === COLOR.ORANGE) return RANK.MEDIUM;
     else return RANK.LOW;
 }
 
@@ -52,14 +52,14 @@ const resolveHighestRank = (edge: Edge): keyof Edge  => {
     }
 }
 
-const colorToEmoji = (color: Color): string => {
+const colorToEmoji = (color: COLOR): string => {
     switch (color) {
-        case Color.White: return "⬜";
-        case Color.Yellow: return "🟨";
-        case Color.Red: return "🟥";
-        case Color.Orange: return "🟧";
-        case Color.Green: return "🟩";
-        case Color.Blue: return "🟦";
+        case COLOR.WHITE: return "⬜";
+        case COLOR.YELLOW: return "🟨";
+        case COLOR.RED: return "🟥";
+        case COLOR.ORANGE: return "🟧";
+        case COLOR.GREEN: return "🟩";
+        case COLOR.BLUE: return "🟦";
         default: return "";
     }
 }
@@ -70,10 +70,10 @@ const colorToEmoji = (color: Color): string => {
 // veut dire que l'on doit pouvoir faire "numero 0~11 = 2 couleurs"
 
 type Edge = {
-    colorOne: Color;
-    colorTwo: Color;
+    colorOne: COLOR;
+    colorTwo: COLOR;
 };
-type Corner = Edge & { colorThree: Color };
+type Corner = Edge & { colorThree: COLOR };
 
 class Cube {
     static #instance: Cube;
@@ -81,28 +81,28 @@ class Cube {
     private cornersState: string;
 
     public static edgeLibrary: Array<Edge> = [
-        { colorOne: Color.White, colorTwo: Color.Green },
-        { colorOne: Color.White, colorTwo: Color.Orange },
-        { colorOne: Color.White, colorTwo: Color.Blue },
-        { colorOne: Color.White, colorTwo: Color.Red },
-        { colorOne: Color.Orange, colorTwo: Color.Green },
-        { colorOne: Color.Blue, colorTwo: Color.Orange },
-        { colorOne: Color.Red, colorTwo: Color.Blue },
-        { colorOne: Color.Green, colorTwo: Color.Red },
-        { colorOne: Color.Yellow, colorTwo: Color.Green },
-        { colorOne: Color.Yellow, colorTwo: Color.Orange },
-        { colorOne: Color.Yellow, colorTwo: Color.Blue },
-        { colorOne: Color.Yellow, colorTwo: Color.Red }
+        { colorOne: COLOR.WHITE, colorTwo: COLOR.GREEN },
+        { colorOne: COLOR.WHITE, colorTwo: COLOR.ORANGE },
+        { colorOne: COLOR.WHITE, colorTwo: COLOR.BLUE },
+        { colorOne: COLOR.WHITE, colorTwo: COLOR.RED },
+        { colorOne: COLOR.ORANGE, colorTwo: COLOR.GREEN },
+        { colorOne: COLOR.BLUE, colorTwo: COLOR.ORANGE },
+        { colorOne: COLOR.RED, colorTwo: COLOR.BLUE },
+        { colorOne: COLOR.GREEN, colorTwo: COLOR.RED },
+        { colorOne: COLOR.YELLOW, colorTwo: COLOR.GREEN },
+        { colorOne: COLOR.YELLOW, colorTwo: COLOR.ORANGE },
+        { colorOne: COLOR.YELLOW, colorTwo: COLOR.BLUE },
+        { colorOne: COLOR.YELLOW, colorTwo: COLOR.RED }
     ];
     public static cornerLibrary: Array<Corner> = [
-        { colorOne: Color.White,  colorTwo: Color.Green,  colorThree: Color.Orange },
-        { colorOne: Color.White,  colorTwo: Color.Orange, colorThree: Color.Blue },
-        { colorOne: Color.White,  colorTwo: Color.Blue,   colorThree: Color.Red },
-        { colorOne: Color.White,  colorTwo: Color.Red,    colorThree: Color.Green },
-        { colorOne: Color.Yellow, colorTwo: Color.Orange, colorThree: Color.Green },
-        { colorOne: Color.Yellow, colorTwo: Color.Blue,   colorThree: Color.Orange },
-        { colorOne: Color.Yellow, colorTwo: Color.Red,    colorThree: Color.Blue },
-        { colorOne: Color.Yellow, colorTwo: Color.Green,  colorThree: Color.Red }
+        { colorOne: COLOR.WHITE,  colorTwo: COLOR.GREEN,  colorThree: COLOR.ORANGE },
+        { colorOne: COLOR.WHITE,  colorTwo: COLOR.ORANGE, colorThree: COLOR.BLUE },
+        { colorOne: COLOR.WHITE,  colorTwo: COLOR.BLUE,   colorThree: COLOR.RED },
+        { colorOne: COLOR.WHITE,  colorTwo: COLOR.RED,    colorThree: COLOR.GREEN },
+        { colorOne: COLOR.YELLOW, colorTwo: COLOR.ORANGE, colorThree: COLOR.GREEN },
+        { colorOne: COLOR.YELLOW, colorTwo: COLOR.BLUE,   colorThree: COLOR.ORANGE },
+        { colorOne: COLOR.YELLOW, colorTwo: COLOR.RED,    colorThree: COLOR.BLUE },
+        { colorOne: COLOR.YELLOW, colorTwo: COLOR.GREEN,  colorThree: COLOR.RED }
     ];
 
     private readonly edgesSolved: string = "01011_01010_01001_01000_00111_00110_00101_00100_00011_00010_00001_00000";
@@ -136,7 +136,7 @@ class Cube {
         return this.cornersState.split('_');
     }
 
-    private resolveEdgeColor(edgeNumber: number, faceGoal: Color): Color {
+    private resolveEdgeCOLOR(edgeNumber: number, faceGoal: COLOR): COLOR {
         // we reverse it to be able to read the positions easily
         const edges = this.getEdges().reverse();
 
@@ -165,7 +165,7 @@ class Cube {
         }
     }
 
-    private resolveCornerColor(cornerNumber: number, faceGoal: Color): Color {
+    private resolveCornerCOLOR(cornerNumber: number, faceGoal: COLOR): COLOR {
         const corners = this.getCorners().reverse();
 
         const cornerOfInterest = Cube.cornerLibrary[parseInt(corners[cornerNumber].slice(-3), 2)];
@@ -178,12 +178,12 @@ class Cube {
         }
 
         // faces of the slot (a face is identified by its center color), and stickers of the piece
-        const slotFaces: Color[] = [onPosition.colorOne, onPosition.colorTwo, onPosition.colorThree];
-        const pieceColors: Color[] = [cornerOfInterest.colorOne, cornerOfInterest.colorTwo, cornerOfInterest.colorThree];
+        const slotFaces: COLOR[] = [onPosition.colorOne, onPosition.colorTwo, onPosition.colorThree];
+        const pieceCOLORs: COLOR[] = [cornerOfInterest.colorOne, cornerOfInterest.colorTwo, cornerOfInterest.colorThree];
 
         const faceIndex = slotFaces.indexOf(faceGoal);
         if (faceIndex === -1) {
-            throw new Error("CubeError: resolveCornerColor called with a face that doesn't touch this corner position.");
+            throw new Error("CubeError: resolveCornerCOLOR called with a face that doesn't touch this corner position.");
         }
 
         // Face of the slot on which the piece's strongest color sits.
@@ -192,13 +192,13 @@ class Cube {
 
         // A twisted corner keeps its cyclic color order, so the sticker on faceGoal
         // is the one offset from the strongest sticker by the same amount as the faces.
-        return pieceColors[(faceIndex - strongestFaceIndex + 3) % 3];
+        return pieceCOLORs[(faceIndex - strongestFaceIndex + 3) % 3];
     }
 
-    private getFace(color: Color): string {
+    private getFace(color: COLOR): string {
         /**
          * IMPLEMENT ROTATION ARGUMENT.
-         * Face in itself has no real sense. add "anchorColor" argument, which would be the color one face above, so we know the face is rotated the right way.
+         * Face in itself has no real sense. add "anchorCOLOR" argument, which would be the color one face above, so we know the face is rotated the right way.
          */
 
         /**
@@ -208,35 +208,35 @@ class Cube {
         let paintedFace = "";
 
         switch (color) {
-            case Color.White:
+            case COLOR.WHITE:
                 paintedFace += "          ";
-                paintedFace += colorToEmoji(this.resolveCornerColor(2, Color.White)) + ' ';
-                paintedFace += colorToEmoji(this.resolveEdgeColor(3, Color.White)) + ' ';
-                paintedFace += colorToEmoji(this.resolveCornerColor(3, Color.White));
+                paintedFace += colorToEmoji(this.resolveCornerCOLOR(2, COLOR.WHITE)) + ' ';
+                paintedFace += colorToEmoji(this.resolveEdgeCOLOR(3, COLOR.WHITE)) + ' ';
+                paintedFace += colorToEmoji(this.resolveCornerCOLOR(3, COLOR.WHITE));
 
                 paintedFace += "\n          ";
-                paintedFace += colorToEmoji(this.resolveEdgeColor(2, Color.White)) + ' ⬜ ';
-                paintedFace += colorToEmoji(this.resolveEdgeColor(0, Color.White));
+                paintedFace += colorToEmoji(this.resolveEdgeCOLOR(2, COLOR.WHITE)) + ' ⬜ ';
+                paintedFace += colorToEmoji(this.resolveEdgeCOLOR(0, COLOR.WHITE));
             
                 paintedFace += "\n          ";
-                paintedFace += colorToEmoji(this.resolveCornerColor(1, Color.White)) + ' ';
-                paintedFace += colorToEmoji(this.resolveEdgeColor(1, Color.White)) + ' ';
-                paintedFace += colorToEmoji(this.resolveCornerColor(0, Color.White)) + "\n";
+                paintedFace += colorToEmoji(this.resolveCornerCOLOR(1, COLOR.WHITE)) + ' ';
+                paintedFace += colorToEmoji(this.resolveEdgeCOLOR(1, COLOR.WHITE)) + ' ';
+                paintedFace += colorToEmoji(this.resolveCornerCOLOR(0, COLOR.WHITE)) + "\n";
 
                 break;
-            case Color.Orange:
+            case COLOR.ORANGE:
                 // get positions 1, 4, 9, 5
                 break;
-            case Color.Blue:
+            case COLOR.BLUE:
                 // get positions 2, 5, 10, 6
                 break;
-            case Color.Red:
+            case COLOR.RED:
                 // get positions 3, 6, 11, 7
                 break;
-            case Color.Green:
+            case COLOR.GREEN:
                 // get positions 0, 4, 8, 7
                 break;
-            case Color.Yellow:
+            case COLOR.YELLOW:
                 // get positions 8, 9, 10, 11
                 break;
             default: throw new Error("CubeError: getFace called with invalid color.");
@@ -256,7 +256,7 @@ class Cube {
      */
     public toString() {
 
-        console.log(this.getFace(Color.White));
+        console.log(this.getFace(COLOR.WHITE));
 
         // console.log('          🟥 🟥 🟥');
         // console.log('          🟥 🟥 🟥');
