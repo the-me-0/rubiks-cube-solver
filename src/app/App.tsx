@@ -11,7 +11,7 @@ function App() {
 
   useEffect(() => {
     const cube: Cube = Cube.instance;
-    cube.toString();
+    console.log(cube.toString());
   })
 
   return (
